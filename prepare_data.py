@@ -1,15 +1,25 @@
+import argparse
 import numpy as np
-from torchvision import datasets, transforms
-from collections import defaultdict
 import os
 from io import BytesIO
-from config import (
-    INPUT_DATA,
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
+from config.config import (
     LINK_DATA_HDFS,
     LINK_DOWNLOAD_SAVE,
     LINK_DATA_LOCAL,
-    client,
+    NUM_SAMPLES_PER_LABEL,
+    TRAIN_RATIO,
+    VALID_RATIO,
+    TEST_RATIO,
+    CLIENT,
 )
+
+
+def create_dataloader(dataset, batch_size=64):
+    """Create a DataLoader for the given dataset."""
+    data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    return data_loader
 
 
 def download_mnist_data(download_path):
@@ -22,7 +32,7 @@ def download_mnist_data(download_path):
 
 
 def save_to_hdfs(dataset, hdfs_path):
-    client.makedirs(hdfs_path)
+    CLIENT.makedirs(hdfs_path)
     """Save dataset to HDFS."""
     print("Path hdfs save:", hdfs_path)
     for i in range(len(dataset)):
@@ -38,11 +48,11 @@ def save_to_hdfs(dataset, hdfs_path):
             hdfs_file_path = f"{hdfs_path}/mnist_{i}.npy"
 
             # Write to HDFS
-            client.write(hdfs_file_path, data=byte_stream.getvalue(), overwrite=True)
+            CLIENT.write(hdfs_file_path, data=byte_stream.getvalue(), overwrite=True)
 
             # Save label
             label_hdfs_path = f"{hdfs_path}/label_{i}.txt"
-            client.write(label_hdfs_path, data=str(label), overwrite=True)
+            CLIENT.write(label_hdfs_path, data=str(label), overwrite=True)
 
 
 def save_locally(dataset, local_path):
@@ -80,19 +90,21 @@ def show_dataset_info(dataset):
 def show_all_labels(dataset):
     """Show all labels in the dataset."""
     labels = [label for _, label in dataset]
-    # Sử dụng set để loại bỏ các nhãn trùng nhau
     unique_labels = set(labels)
-
-    # Chuyển đổi lại thành danh sách nếu cần thiết
     unique_labels = list(unique_labels)
-
     print(f"All labels: {unique_labels}")
 
 
 def split_dataset_by_labels(
-    dataset, num_samples_per_label=100, train_ratio=0.7, valid_ratio=0.2, test_ratio=0.1
+    dataset,
+    num_samples_per_label=NUM_SAMPLES_PER_LABEL,
+    train_ratio=TRAIN_RATIO,
+    valid_ratio=VALID_RATIO,
+    test_ratio=TEST_RATIO,
 ):
     """Split dataset by labels."""
+    from collections import defaultdict
+
     label_to_images = defaultdict(list)
 
     for image, label in dataset:
@@ -113,7 +125,7 @@ def split_dataset_by_labels(
     return train_set, valid_set, test_set
 
 
-def data_mnist_local():
+def dowload_and_split_data():
     # Download MNIST data
     print("***Download MNIST data***")
     train_dataset = download_mnist_data(LINK_DOWNLOAD_SAVE)
@@ -124,41 +136,29 @@ def data_mnist_local():
     # Split dataset
     print("***Split dataset***")
     train_set, valid_set, test_set = split_dataset_by_labels(
-        train_dataset, 100, 0.7, 0.2, 0.1
+        train_dataset, NUM_SAMPLES_PER_LABEL, TRAIN_RATIO, VALID_RATIO, TEST_RATIO
     )
+    return train_set, valid_set, test_set
+
+
+def data_mnist_local():
+    train_set, valid_set, test_set = dowload_and_split_data()
 
     # Save datasets to HDFS
     print("***Save datasets to HDFS***")
-    print("Save train datasets to HDFS")
     save_locally(train_set, f"{LINK_DATA_LOCAL}/train")
-    print("Save valid datasets to HDFS")
     save_locally(valid_set, f"{LINK_DATA_LOCAL}/valid")
-    print("Save test datasets to HDFS")
     save_locally(test_set, f"{LINK_DATA_LOCAL}/test")
     print("Success")
 
 
 def data_mnist_hdfs():
-    # Download MNIST data
-    print("***Download MNIST data***")
-    train_dataset = download_mnist_data(LINK_DOWNLOAD_SAVE)
-    print("***Dataset info***")
-    show_dataset_info(train_dataset)
-    show_all_labels(train_dataset)
-
-    # Split dataset
-    print("***Split dataset***")
-    train_set, valid_set, test_set = split_dataset_by_labels(
-        train_dataset, 100, 0.7, 0.2, 0.1
-    )
+    train_set, valid_set, test_set = dowload_and_split_data()
 
     # Save datasets to HDFS
     print("***Save datasets to HDFS***")
-    print("Save train datasets to HDFS")
     save_to_hdfs(train_set, f"{LINK_DATA_HDFS}/train")
-    print("Save valid datasets to HDFS")
     save_to_hdfs(valid_set, f"{LINK_DATA_HDFS}/valid")
-    print("Save test datasets to HDFS")
     save_to_hdfs(test_set, f"{LINK_DATA_HDFS}/test")
     print("Success")
 
@@ -169,10 +169,24 @@ def data_mnist_hdfs():
 # Data type of image: <class 'torch.Tensor'>
 # Data type of label: <class 'int'>
 # All labels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+
 def main():
-    data_mnist_local()
-    # data_mnist_hdfs()
-    # Cleanup local downloaded data
+    parser = argparse.ArgumentParser(description="MNIST Data Preparation")
+    parser.add_argument(
+        "--save_mode",
+        choices=["local", "hdfs"],
+        default="local",
+        help="Choose where to save the MNIST data: 'local' or 'hdfs'",
+    )
+    args = parser.parse_args()
+
+    if args.save_mode == "local":
+        data_mnist_local()
+    elif args.save_mode == "hdfs":
+        data_mnist_hdfs()
+
+    # Optional: Cleanup local downloaded data
     # cleanup_local_data(LINK_DOWNLOAD_SAVE)
 
 

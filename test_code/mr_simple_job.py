@@ -2,7 +2,7 @@ from mrjob.job import MRJob
 import numpy as np
 import torch
 from RBM import RBM
-from config import MODEL_SAVE_PATH
+from config.config import MODEL_SAVE_PATH
 
 
 class MRSimpleJob(MRJob):

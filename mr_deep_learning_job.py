@@ -3,7 +3,7 @@ import numpy as np
 from io import BytesIO
 import torch
 from RBM import RBM
-from config import MODEL_SAVE_PATH
+from config.config import MODEL_SAVE_PATH
 
 
 class MRDeepLearningJob(MRJob):
@@ -23,8 +23,10 @@ class MRDeepLearningJob(MRJob):
         rbm.eval()
 
         # Process data (assuming line is a serialized image)
-        # image = np.load(BytesIO(line))
-        image = np.load(BytesIO(line.encode()))
+        print("Length of line:", len(line))
+        image = np.load(BytesIO(line))
+        # image = np.load(BytesIO(line.encode()))
+        print("Shape of image:", image.shape)
         image = torch.tensor(image, dtype=torch.float32).view(1, -1)
 
         # Forward pass

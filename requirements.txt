@@ -1,0 +1,5 @@
+numpy
+hdfs
+mrjob
+scikit-learn
+pandas

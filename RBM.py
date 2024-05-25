@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from config import DEVICE
+from config.config import DEVICE
 
 
 class RBM(nn.Module):
@@ -55,6 +55,7 @@ class RBM(nn.Module):
                 self.contrastive_divergence(v, k)
 
                 optimizer.step()
+                # optimizer.zero_grad()  # Reset the gradients after each step
                 epoch_loss += torch.sum((v - self.forward(v)) ** 2).item()
 
             print(

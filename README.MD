@@ -1,53 +1,79 @@
-**Active Deactivate .venv**
+# RBM MapReduce in Python with Hadoop
+
+## Project Description
+
+This project demonstrates how to train Restricted Boltzmann Machines (RBMs) on large datasets using the MapReduce programming model with Hadoop 3.3.0. By leveraging the distributed computing capabilities of Hadoop, the project showcases a scalable approach to machine learning tasks that require significant computational resources.
+
+## Features
+
+- Distributed Data Processing: Uses Hadoop MapReduce to partition and process large datasets in parallel.
+- RBM Training: Implements training of RBMs on partitioned data chunks using MapReduce.
+- Model Aggregation: Aggregates weights from locally trained RBMs to form a global model.
+- Scalability: Efficiently handles large-scale data using Hadoop.
+- Ease of Use: Provides a straightforward workflow for training and inference with RBMs.
+
+## Requirements
+
+- Python 3.11.x
+- Hadoop 3.3.0
+
+## Installation
+
+**1. Clone the repository:**
 
 ```bash
-.\venv\Scripts\activate.bat
+git clone https://github.com/TamAIRC/rbm-mapreduce-python.git
+cd rbm-mapreduce-python
 ```
+
+**2. Run setup**
 
 ```bash
-deactivate
+python setup.py
 ```
 
-**Remove folder/file**
+**3. Setup Hadoop 3.3.0:**
+Follow the instructions to install and configure Hadoop 3.3.0 on your system. You can find detailed installation steps on the [official Hadoop website]("https://hadoop.apache.org/").
+
+Step by Step setup [there]("link setup")
+
+## Usage
+
+### Downloading and Preparing Data
+
+**1. Run the prepare mnist data script**
+[prepare_data.py](./prepare_data.py)
 ```bash
-hdfs dfs -rm -r /path/to
+python prepare_data.py --save_mode local
+
 ```
 
-**Format namenode**
+## Project Structure
+- `config.py`: Configuration file for paths and HDFS client.
+- `setup.py`: 
+- `prepare_data.py`: Prepare data script to download, preprocess, and save MNIST data.
+- `rbm.py`: 
+- `rbm_pretraining.py`: 
+- `train.py`: 
+<!-- - `mapper.py`: Mapper script for Hadoop MapReduce.
+- `reducer.py`: Reducer script for Hadoop MapReduce. -->
+- `README.md`: Project description and usage instructions.
+- `requirements.txt`: List of Python dependencies.
 
-```bash
-hdfs namenode -format
+## Running the Project
+
+To run the project and download, preprocess, and save the MNIST data:
+
+**1. Ensure Hadoop is configured and running:**
+
+```cmd
+start-all
 ```
 
-**Format namenode**
+or
 
-```bash
-hdfs datanode -format
+```cmd
+start-dfs.sh
+start-yarn.sh
 ```
-**Put file to hdfs**
-```bash
-hdfs dfs -put /local/path/to/file /path/to/file
-```
-**Fix bug datanode shutdown**
-- Windows
-Open and Get clusterID: "C:\hadoop-3.3.0\data\namenode\current\VERSION"
-Open and Paste clusterID: "C:\hadoop-3.3.0\data\datanode\current\VERSION"
-
-
-## Train
-
-```bash
-python ./hadoop_rbm/mr_deep_learning_job.py -r hadoop ./hadoop_rbm/input_mnist/* --model-path ./hadoop_rbm/model/rbm.pth
-```
-
-```bash
-python .\hadoop_rbm\mr_deep_learning_job.py -r hadoop hdfs:///input_mnist/* --model-path hdfs:///model/rbm.pth --hadoop-streaming-jar C:\hadoop-3.3.0\share\hadoop\tools\lib\hadoop-streaming-3.3.0.jar
-```
-```bash
-python .\hadoop_rbm\mr_simple_job.py -r hadoop hdfs:///input_mnist/train --hadoop-streaming-jar C:\hadoop-3.3.0\share\hadoop\tools\lib\hadoop-streaming-3.3.0.jar
-```
-
-
-```bash
-python ./hadoop_rbm/mr_deep_learning_job.py -r hadoop ./hadoop_rbm/input_mnist/train --model-path ./hadoop_rbm/model/rbm.pth --hadoop-streaming-jar C:\hadoop-3.3.0\share\hadoop\tools\lib\hadoop-streaming-3.3.0.jar
-```
+**2. Run the main script to process and save data locally or to HDFS:**
