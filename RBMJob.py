@@ -73,14 +73,14 @@ class RBMJob(MRJob):
     def reducer(self, key, values):
         i, j = key
         self.W[i, j] += sum(values)  # Sum up partial gradients
-
     def reducer_final(self):
         # Save the updated weights to HDFS
         with BytesIO() as byte_stream:
             np.save(byte_stream, self.W)
             byte_stream.seek(0)
+            # f"{self.hdfs_output_path}/rbm_weights.pth"
             self.client.write(
-                f"{self.hdfs_output_path}/rbm_weights.npy",
+                f"/rbm_weights.pth",
                 data=byte_stream.getvalue(),
                 overwrite=True,
             )
