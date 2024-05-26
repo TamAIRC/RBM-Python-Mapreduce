@@ -77,3 +77,6 @@ start-dfs.sh
 start-yarn.sh
 ```
 **2. Run the main script to process and save data locally or to HDFS:**
+
+**RBM Pretrain**
+- Use Hadoop:

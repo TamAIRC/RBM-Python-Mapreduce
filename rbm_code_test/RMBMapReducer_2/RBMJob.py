@@ -6,8 +6,6 @@ from io import BytesIO
 
 
 class RBMJob(MRJob):
-    def __init__(self):
-        self.client = InsecureClient("http://localhost:9870", user="TamNgo_2")
 
     def configure_args(self):
         super(RBMJob, self).configure_args()
@@ -34,6 +32,7 @@ class RBMJob(MRJob):
             np.random.randn(self.n_visible, self.n_hidden) * 0.01
         )  # Initial weights
         self.learning_rate = 0.01
+        self.client = InsecureClient("http://localhost:9870", user="TamNgo_2")
         self.hdfs_path = self.options.hdfs_path
         self.file_list = self.client.list(self.hdfs_path)
 
@@ -68,12 +67,12 @@ class RBMJob(MRJob):
         self.n_visible = 784  # Number of visible units (e.g., for MNIST)
         self.n_hidden = self.options.n_hidden
         self.W = np.zeros((self.n_visible, self.n_hidden))
+        self.client = InsecureClient("http://localhost:9870", user="TamNgo_2")
         self.hdfs_output_path = self.options.hdfs_output_path
 
     def reducer(self, key, values):
         i, j = key
         self.W[i, j] += sum(values)  # Sum up partial gradients
-
     def reducer_final(self):
         # Save the updated weights to HDFS
         with BytesIO() as byte_stream:
