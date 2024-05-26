@@ -74,7 +74,6 @@ class FineTunedAutoencoder(BaseEstimator, TransformerMixin):
         return self.mlp.score(X_transformed, y)
 
 
-# Example usage
 if __name__ == "__main__":
     from sklearn.datasets import fetch_openml
     from sklearn.model_selection import train_test_split
